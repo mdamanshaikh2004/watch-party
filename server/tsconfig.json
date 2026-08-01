@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    // rootDir is the repo root because we import ../shared/types, which emits real JS
+    // (it exports const event names). That is why the build output is dist/server/src.
+    "rootDir": "..",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*", "../shared/**/*"]
+}

@@ -1,0 +1,3 @@
+# Normalise line endings so a Windows checkout and a Linux deploy produce identical
+# files. Without this, shell scripts and lockfiles can differ between the two.
+* text=auto eol=lf
