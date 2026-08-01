@@ -124,7 +124,25 @@ input {
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+}
+
+/* Monospace so "websocket" and "polling" are legible at a glance from a screen share. */
+.transport-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+}
+
+.transport-ws {
+  border-color: #3f7d55;
+  color: #7ee2a8;
+}
+
+/* Amber, not red: long-polling still works, it is just not what we are demonstrating. */
+.transport-fallback {
+  border-color: #8a6d3b;
+  color: #f0c674;
 }
 
 .room-body {

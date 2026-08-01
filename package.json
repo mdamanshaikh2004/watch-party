@@ -1,0 +1,16 @@
+{
+  "name": "watch-party",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install && npm --prefix server run build",
+    "start": "cross-env NODE_ENV=production node server/dist/server/src/index.js",
+    "typecheck": "npm --prefix server run typecheck"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3"
+  }
+}

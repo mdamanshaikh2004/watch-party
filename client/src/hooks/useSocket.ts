@@ -60,6 +60,8 @@ export interface UseSocketResult {
   video: SyncStatePayload | null
   /** Set when the host removed you; the room should stop rendering and bounce Home. */
   removedReason: string | null
+  /** Live Socket.IO transport — 'websocket' or 'polling'; null while disconnected. */
+  transport: string | null
   actions: RoomActions
 }
 
@@ -76,6 +78,7 @@ export function useSocket(roomCode: string, username: string): UseSocketResult {
   const [error, setError] = useState<ErrorPayload | null>(null)
   const [video, setVideo] = useState<SyncStatePayload | null>(null)
   const [removedReason, setRemovedReason] = useState<string | null>(null)
+  const [transport, setTransport] = useState<string | null>(null)
   // Socket listeners are registered once, so they would close over a stale myId.
   const myIdRef = useRef<string | null>(null)
   // Emit helpers read the socket from a ref so their identity never changes; they are
@@ -95,6 +98,15 @@ export function useSocket(roomCode: string, username: string): UseSocketResult {
 
     // Joining on 'connect' rather than once at setup means a reconnect re-joins too.
     activeSocket.on('connect', () => {
+      // Socket.IO always opens on HTTP long-polling and upgrades to a WebSocket a moment
+      // later — and if the upgrade fails (a proxy that will not pass Upgrade headers) it
+      // stays on polling silently, everything still working but slower. Reading the
+      // engine here and again on 'upgrade' is what makes that visible instead of assumed.
+      // The engine is rebuilt per connection, so this re-registers on every reconnect.
+      const engine = activeSocket.io.engine
+      setTransport(engine.transport.name)
+      engine.on('upgrade', (upgraded) => setTransport(upgraded.name))
+
       // The token is what turns a reconnect into a reclaim instead of a new stranger.
       const payload = { roomCode, username, token: readToken(roomCode) }
       activeSocket.emit(CLIENT_EVENTS.JOIN_ROOM, payload, (ack: JoinAck) => {
@@ -113,6 +125,10 @@ export function useSocket(roomCode: string, username: string): UseSocketResult {
         setConnectionState('joined')
       })
     })
+
+    // Clearing on disconnect keeps the badge from claiming a live WebSocket while the
+    // client is actually mid-reconnect.
+    activeSocket.on('disconnect', () => setTransport(null))
 
     activeSocket.on('connect_error', () => {
       setError({ code: 'CONNECTION_FAILED', message: 'Cannot reach the server.' })
@@ -174,5 +190,15 @@ export function useSocket(roomCode: string, username: string): UseSocketResult {
   // Derived rather than stored, so a promotion to host updates "me" for free.
   const me = participants.find((p) => p.id === myId) ?? null
 
-  return { socket, participants, me, connectionState, error, video, removedReason, actions }
+  return {
+    socket,
+    participants,
+    me,
+    connectionState,
+    error,
+    video,
+    removedReason,
+    transport,
+    actions,
+  }
 }

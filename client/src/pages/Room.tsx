@@ -12,10 +12,8 @@ interface Props {
 export function Room({ code, username, onUsernameChange, onLeave }: Props) {
   // useSocket stays outside the branch below because hooks cannot be conditional;
   // it simply does nothing until there is a username to join with.
-  const { participants, me, connectionState, error, video, removedReason, actions } = useSocket(
-    code,
-    username,
-  )
+  const { participants, me, connectionState, error, video, removedReason, transport, actions } =
+    useSocket(code, username)
 
   if (!username) {
     return <NamePrompt code={code} onSubmit={onUsernameChange} />
@@ -53,6 +51,7 @@ export function Room({ code, username, onUsernameChange, onLeave }: Props) {
       participants={participants}
       me={me}
       video={video}
+      transport={transport}
       actions={actions}
       onLeave={onLeave}
     />

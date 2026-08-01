@@ -12,11 +12,12 @@ interface Props {
   participants: ParticipantDTO[]
   me: ParticipantDTO | null
   video: SyncStatePayload | null
+  transport: string | null
   actions: RoomActions
   onLeave: () => void
 }
 
-export function RoomShell({ code, participants, me, video, actions, onLeave }: Props) {
+export function RoomShell({ code, participants, me, video, transport, actions, onLeave }: Props) {
   const playerRef = useRef<YouTubePlayerHandle>(null)
   const [copied, setCopied] = useState(false)
   // Promoted to state on ready rather than read from the ref during render, so the
@@ -55,6 +56,7 @@ export function RoomShell({ code, participants, me, video, actions, onLeave }: P
           <strong className="code">{code}</strong>
         </div>
         <div className="header-actions">
+          <TransportBadge transport={transport} />
           <button onClick={copyLink}>{copied ? 'Copied!' : 'Copy invite link'}</button>
           <button className="secondary" onClick={onLeave}>
             Leave
@@ -99,6 +101,27 @@ export function RoomShell({ code, participants, me, video, actions, onLeave }: P
         <ParticipantList participants={participants} me={me} actions={actions} />
       </main>
     </div>
+  )
+}
+
+/**
+ * Names the transport the room is actually running on. Socket.IO degrades to HTTP
+ * long-polling without complaining, and a real WebSocket is the point of the exercise —
+ * so it is stated on screen rather than left to the network tab.
+ */
+function TransportBadge({ transport }: { transport: string | null }) {
+  const live = transport === 'websocket'
+  return (
+    <span
+      className={`badge transport-badge ${live ? 'transport-ws' : 'transport-fallback'}`}
+      title={
+        live
+          ? 'Connected over a WebSocket.'
+          : 'Not on a WebSocket — Socket.IO is falling back to HTTP long-polling.'
+      }
+    >
+      {transport ?? 'offline'}
+    </span>
   )
 }
 
